@@ -2,7 +2,13 @@
     <h1>催眠APP</h1>
     <img width=64 src="app.ico">
 
-原生Android开发
+原生Android开发，最低支持安卓7
+</div>
+
+### 界面
+
+<div align="center">
+    <img src="show.png">
 </div>
 
 ### 构建
