@@ -15,6 +15,11 @@ import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
@@ -22,8 +27,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.core.graphics.toColorInt
@@ -54,13 +62,7 @@ class MainActivity : ComponentActivity() {
                         .padding(innerPadding),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.heart),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth(0.5f)
-                            .aspectRatio(1f)
-                    )
+                    BeatingHeart()
                 }
             }
         }
@@ -77,10 +79,37 @@ class MainActivity : ComponentActivity() {
         val displayMetrics = resources.displayMetrics
         centerX = displayMetrics.widthPixels / 2f
         centerY = displayMetrics.heightPixels / 2f
-        maxRadius = (displayMetrics.heightPixels + 200f) / 2f
+        // 适配宽屏
+        maxRadius = (maxOf(displayMetrics.heightPixels, displayMetrics.widthPixels) + 200f) / 2f
 
         // 开始无限循环创建圆形动画
         startInfiniteCircleAnimation()
+    }
+
+    @Composable
+    fun BeatingHeart() {
+        val infiniteTransition = rememberInfiniteTransition()
+        val scale by infiniteTransition.animateFloat(
+            initialValue = 1f,
+            targetValue = 0.8f,
+            animationSpec = infiniteRepeatable(
+                animation = keyframes {
+                    durationMillis = 1000
+                    0.8f at 500 // 在500ms时缩小到0.8
+                    1f at 1000 // 在1000ms时恢复到1
+                },
+                repeatMode = RepeatMode.Restart
+            )
+        )
+
+        Image(
+            painter = painterResource(id = R.drawable.heart),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .aspectRatio(1f)
+                .scale(scale)
+        )
     }
 
     private fun startInfiniteCircleAnimation() {
@@ -133,7 +162,6 @@ class MainActivity : ComponentActivity() {
 
         circleView.setCenter(centerX, centerY)
         circleView.setRadius(initialRadius)
-        circleView.visibility = View.VISIBLE
         rootLayout.addView(circleView)
 
         ValueAnimator.ofFloat(initialRadius, maxRadius).apply {
@@ -194,7 +222,6 @@ class CircleView(context: Context) : View(context) {
     }
 
     override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
         canvas.drawCircle(centerX, centerY, radius, paint)
     }
 }
