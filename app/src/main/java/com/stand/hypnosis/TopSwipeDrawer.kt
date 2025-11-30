@@ -1,5 +1,6 @@
 package com.stand.hypnosis
 
+import android.content.Context
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -13,8 +14,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -43,14 +48,21 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.stand.hypnosis.model.Language
+import com.stand.hypnosis.utils.AppLanguageUtils.changeAppLanguage
+import com.stand.hypnosis.utils.AppLanguageUtils.readLanguageTag
+import com.stand.hypnosis.utils.AppLanguageUtils.saveLanguageTag
 import kotlinx.coroutines.delay
 import kotlin.math.roundToInt
 
@@ -69,7 +81,11 @@ fun TopSwipeDrawerLayer(
     var isFullScreen by remember { mutableStateOf(configManager.isFullScreen) }
     var ringColor by remember { mutableIntStateOf(configManager.ringColor) }
     var bgColor by remember { mutableIntStateOf(configManager.bgColor) }
-
+    val context = LocalContext.current
+    // 读取pref中存储的语言
+    val (currentLanguageTag, setCurrentLanguageTag) = remember(context) {
+        mutableStateOf(readLanguageTag(context))
+    }
     // 当配置改变时，直接更新 ConfigManager
     fun updateIsBeating(value: Boolean) {
         isBeating = value
@@ -213,10 +229,11 @@ fun TopSwipeDrawerLayer(
                     )
             ){
                 Column{
-                    Text("设置面板", style = MaterialTheme.typography.headlineMedium,
+                    Text(
+                        stringResource(R.string.settings_panel), style = MaterialTheme.typography.headlineMedium,
                         color = Color.White,
                         modifier = Modifier.padding(top = 35.dp, start = 16.dp))
-                    Text("往下滑动打开，往上滑动关闭",
+                    Text(stringResource(R.string.panel_swipe_hint),
                         color = Color.White,
                         modifier = Modifier.padding(top = 10.dp, start = 16.dp, bottom = 20.dp))
 
@@ -225,7 +242,7 @@ fun TopSwipeDrawerLayer(
                         // 心跳动画开关
                         {
                             SwitchSettingItem(
-                                title = "心跳动画",
+                                title = stringResource(R.string.heartbeat_animation),
                                 checked = isBeating,
                                 onCheckedChange = { newValue ->
                                     updateIsBeating(newValue)
@@ -234,7 +251,7 @@ fun TopSwipeDrawerLayer(
                         },
                         {
                             SwitchSettingItem(
-                                title = "全屏",
+                                title = stringResource(R.string.fullscreen),
                                 checked = isFullScreen,
                                 onCheckedChange = { newValue ->
                                     updateIsFullScreen(newValue)
@@ -244,7 +261,7 @@ fun TopSwipeDrawerLayer(
                         // 圆环颜色选择
                         {
                             ColorSettingItem(
-                                title = "动画颜色",
+                                title = stringResource(R.string.animation_color),
                                 color = ringColor,
                                 onColorClick = { showRingColorPicker = true  }
                             )
@@ -252,9 +269,25 @@ fun TopSwipeDrawerLayer(
                         // 背景颜色选择
                         {
                             ColorSettingItem(
-                                title = "背景颜色",
+                                title = stringResource(R.string.background_color),
                                 color = bgColor,
                                 onColorClick = { showBgColorPicker = true }
+                            )
+                        },
+                        // 语言选择下拉
+                        {
+                            LanguageSettingItem(
+                                currentLocaleTag = currentLanguageTag,
+                                onLanguageSelected = {context, newLocaleTag ->
+                                    if (currentLanguageTag != newLocaleTag) {
+                                        saveLanguageTag(context, newLocaleTag)  // 持久化语言
+                                        setCurrentLanguageTag(newLocaleTag)     // 更新 Compose 状态
+                                        changeAppLanguage(
+                                            context,
+                                            newLocaleTag
+                                        )  // 重建 Activity 加载资源
+                                    }
+                                }
                             )
                         }
                         // 添加更多配置项...
@@ -303,7 +336,7 @@ fun TopSwipeDrawerLayer(
 
                             // 第二行：GitHub 链接
                             Text(
-                                text = "GitHub开源地址",
+                                text = stringResource(R.string.github_repo),
                                 color = Color(0xFF6CC644), // GitHub 绿色
                                 fontSize = 12.sp,
                                 textDecoration = TextDecoration.Underline,
@@ -451,7 +484,7 @@ fun ColorPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("选择颜色")},
+        title = { Text(stringResource(R.string.choose_color))},
         text = {
             Column(
                 modifier = Modifier
@@ -476,15 +509,16 @@ fun ColorPickerDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // 红色通道
+                Text(
+                    stringResource(R.string.color_red),
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.secondary
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        "红",
-                        modifier = Modifier.width(24.dp),
-                        color = MaterialTheme.colorScheme.secondary
-                    )
+
                     Slider(
                         value = red,
                         onValueChange = { red = it },
@@ -498,15 +532,15 @@ fun ColorPickerDialog(
                 }
 
                 // 绿色通道
+                Text(
+                    stringResource(R.string.color_green),
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.secondary
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        "绿",
-                        modifier = Modifier.width(24.dp),
-                        color = MaterialTheme.colorScheme.secondary
-                    )
                     Slider(
                         value = green,
                         onValueChange = { green = it },
@@ -520,15 +554,15 @@ fun ColorPickerDialog(
                 }
 
                 // 蓝色通道
+                Text(
+                    stringResource(R.string.color_blue),
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.secondary
+                )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        "蓝",
-                        modifier = Modifier.width(24.dp),
-                        color = MaterialTheme.colorScheme.secondary
-                    )
                     Slider(
                         value = blue,
                         onValueChange = { blue = it },
@@ -545,13 +579,13 @@ fun ColorPickerDialog(
 
                 // 快速预设颜色
                 val presetColors = listOf(
-                    0xFFFF0000 to "红", 0xFF00FF00 to "绿", 0xFF0000FF to "蓝",
-                    0xFFFFFF00 to "黄", 0xFFFF00FF to "紫", 0xFF00FFFF to "青",
-                    0xFFFFFFFF to "白", 0xFF000000 to "黑", 0xFFFFA500 to "橙",
-                    0xFF808080 to "灰", 0xFFA52A2A to "棕", 0xFFFFC0CB to "粉"
+                    0xFFFF0000 to stringResource(R.string.color_red), 0xFF00FF00 to stringResource(R.string.color_green), 0xFF0000FF to stringResource(R.string.color_blue),
+                    0xFFFFFF00 to stringResource(R.string.color_yellow), 0xFFFF00FF to stringResource(R.string.color_purple), 0xFF00FFFF to stringResource(R.string.color_cyan),
+                    0xFFFFFFFF to stringResource(R.string.color_white), 0xFF000000 to stringResource(R.string.color_black), 0xFFFFA500 to stringResource(R.string.color_orange),
+                    0xFF808080 to stringResource(R.string.color_gray), 0xFFA52A2A to stringResource(R.string.color_brown), 0xFFFFC0CB to stringResource(R.string.color_pink)
                 )
 
-                Text("快速选择:", modifier = Modifier.padding(vertical = 8.dp))
+                Text(stringResource(R.string.quick_select), modifier = Modifier.padding(vertical = 8.dp))
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(4),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -589,15 +623,76 @@ fun ColorPickerDialog(
             TextButton(onClick = {
                 onDismiss
                 onColorSelected(selectedColor.toArgb())}) {
-                Text("确定")
+                Text(stringResource(R.string.confirm))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("取消")
+                Text(stringResource(R.string.cancel))
             }
         },
         titleContentColor = MaterialTheme.colorScheme.secondary,
         textContentColor = MaterialTheme.colorScheme.onSurface
     )
+}
+
+// 语言选择下拉项
+@Composable
+fun LanguageSettingItem(
+    currentLocaleTag: String,
+    onLanguageSelected: (Context, String) -> Unit
+) {
+    val context = LocalContext.current
+    val (expanded, setExpanded) = remember { mutableStateOf(false) }
+    val supportedLanguages = listOf(
+        Language(name = "English", localeTag = "en"),
+        Language(name = "简体中文", localeTag = "zh"),
+        Language(name = "繁體中文", localeTag = "zh-rTW"),
+        Language(name = "日本語", localeTag = "ja")
+    )
+
+    val selectedLanguage = supportedLanguages.find { it.localeTag == currentLocaleTag }
+    val selectedLanguageName = selectedLanguage?.name ?: "System Default"
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { setExpanded(true) }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.baseline_lang_24),
+            contentDescription = null,
+            tint = Color.White
+        )
+
+        Spacer(modifier = Modifier.width(20.dp))
+
+        Text(text = selectedLanguageName,
+            color = Color.White,
+            fontSize = 18.sp,
+            modifier = Modifier.weight(1f))
+
+        Icon(
+            imageVector = Icons.Default.ArrowDropDown,
+            contentDescription = null,
+            tint = Color.White
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { setExpanded(false) }
+        ) {
+            supportedLanguages.forEach { language ->
+                DropdownMenuItem(
+                    onClick = {
+                        setExpanded(false)
+                        onLanguageSelected(context, language.localeTag)
+                    },
+                    text = { Text(text = language.name) },
+                )
+            }
+        }
+    }
 }

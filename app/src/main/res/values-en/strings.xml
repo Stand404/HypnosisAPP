@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">催眠APP</string><string name="settings_panel">Settings Panel</string>
+    <string name="panel_swipe_hint">Swipe down to open, swipe up to close</string>
+    <string name="heartbeat_animation">Heartbeat Animation</string>
+    <string name="fullscreen">Fullscreen</string>
+    <string name="animation_color">Animation Color</string>
+    <string name="background_color">Background Color</string>
+    <string name="github_repo">GitHub Repository</string>
+    <string name="choose_color">Choose Color</string>
+    <string name="color_red">Red</string>
+    <string name="color_green">Green</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_yellow">Yellow</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_cyan">Cyan</string>
+    <string name="color_white">White</string>
+    <string name="color_black">Black</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_gray">Gray</string>
+    <string name="color_brown">Brown</string>
+    <string name="color_pink">Pink</string>
+    <string name="quick_select">Quick Select:</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="language">Language</string>
+
+</resources>

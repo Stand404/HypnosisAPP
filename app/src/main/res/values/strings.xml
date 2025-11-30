@@ -1,3 +1,31 @@
 <resources>
     <string name="app_name">催眠APP</string>
+    <string name="settings_panel">设置面板</string>
+    <string name="panel_swipe_hint">向下滑动打开，向上滑动关闭</string>
+    <string name="heartbeat_animation">心跳动画</string>
+    <string name="fullscreen">全屏</string>
+    <string name="animation_color">动画颜色</string>
+    <string name="background_color">背景颜色</string>
+    <string name="github_repo">GitHub开源地址</string>
+    <string name="choose_color">选择颜色</string>
+    <string name="color_red">红</string>
+    <string name="color_green">绿</string>
+    <string name="color_blue">蓝</string>
+    <string name="color_yellow">黄</string>
+    <string name="color_purple">紫</string>
+    <string name="color_cyan">青</string>
+    <string name="color_white">白</string>
+    <string name="color_black">黑</string>
+    <string name="color_orange">橙</string>
+    <string name="color_gray">灰</string>
+    <string name="color_brown">棕</string>
+    <string name="color_pink">粉</string>
+    <string name="quick_select">快速选择:</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="language">语言</string>
+    <string name="simplified_chinese" translatable="false">简体中文</string>
+    <string name="traditional_chinese" translatable="false">正體中文</string>
+    <string name="japanese" translatable="false">日本語</string>
+    <string name="english" translatable="false">English</string>
 </resources>

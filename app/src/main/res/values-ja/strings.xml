@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">催眠APP</string>
+    <string name="settings_panel">設定パネル</string>
+    <string name="panel_swipe_hint">下スワイプで開く、上スワイプで閉じる</string>
+    <string name="heartbeat_animation">ハートビートアニメーション</string>
+    <string name="fullscreen">全画面</string>
+    <string name="animation_color">アニメーション色</string>
+    <string name="background_color">背景色</string>
+    <string name="github_repo">GitHubリポジトリ</string>
+    <string name="choose_color">色を選択</string>
+    <string name="color_red">赤</string>
+    <string name="color_green">緑</string>
+    <string name="color_blue">青</string>
+    <string name="color_yellow">黄</string>
+    <string name="color_purple">紫</string>
+    <string name="color_cyan">シアン</string>
+    <string name="color_white">白</string>
+    <string name="color_black">黒</string>
+    <string name="color_orange">オレンジ</string>
+    <string name="color_gray">灰</string>
+    <string name="color_brown">茶</string>
+    <string name="color_pink">ピンク</string>
+    <string name="quick_select">クイック選択:</string>
+    <string name="confirm">確定</string>
+    <string name="cancel">キャンセル</string>
+    <string name="language">言語</string>
+
+</resources>

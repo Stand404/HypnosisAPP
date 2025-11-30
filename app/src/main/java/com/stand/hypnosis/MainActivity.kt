@@ -1,5 +1,6 @@
 package com.stand.hypnosis
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,6 +17,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
+import com.stand.hypnosis.utils.AppLanguageUtils.applyLanguageConfiguration
+import com.stand.hypnosis.utils.AppLanguageUtils.readLanguageTag
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -61,6 +64,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        val localeTag = readLanguageTag(newBase)
+        val newContext = applyLanguageConfiguration(newBase, localeTag)
+        super.attachBaseContext(newContext)
     }
 
     fun initConfig() {
