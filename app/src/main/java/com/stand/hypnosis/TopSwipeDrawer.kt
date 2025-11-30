@@ -318,18 +318,18 @@ fun TopSwipeDrawerLayer(
                             // 第一行：版权信息
                             Row {
                                 Text(
-                                    text = "Copyright © 2025 ",
+                                    text = AppInfo.COPYRIGHT,
                                     color = Color.White.copy(0.7f),
                                     fontSize = 12.sp
                                 )
 
                                 Text(
-                                    text = "Stand",
+                                    text = AppInfo.Author.NAME,
                                     color = Color(0xFF29C6FF),
                                     fontSize = 12.sp,
                                     textDecoration = TextDecoration.Underline,
                                     modifier = Modifier.clickable {
-                                        uriHandler.openUri("https://space.bilibili.com/382365750")
+                                        uriHandler.openUri(AppInfo.Author.BILI_URL)
                                     }
                                 )
                             }
@@ -342,7 +342,7 @@ fun TopSwipeDrawerLayer(
                                 textDecoration = TextDecoration.Underline,
                                 modifier = Modifier
                                     .clickable {
-                                        uriHandler.openUri("https://github.com/Stand404/HypnosisAPP")
+                                        uriHandler.openUri(AppInfo.Author.GITHUB_URL)
                                     }
                                     .padding(top = 4.dp)
                             )
