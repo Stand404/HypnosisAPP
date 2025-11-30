@@ -279,14 +279,12 @@ fun TopSwipeDrawerLayer(
                             LanguageSettingItem(
                                 currentLocaleTag = currentLanguageTag,
                                 onLanguageSelected = {context, newLocaleTag ->
-                                    if (currentLanguageTag != newLocaleTag) {
-                                        saveLanguageTag(context, newLocaleTag)  // 持久化语言
-                                        setCurrentLanguageTag(newLocaleTag)     // 更新 Compose 状态
-                                        changeAppLanguage(
-                                            context,
-                                            newLocaleTag
-                                        )  // 重建 Activity 加载资源
-                                    }
+                                    saveLanguageTag(context, newLocaleTag)  // 持久化语言
+                                    setCurrentLanguageTag(newLocaleTag)     // 更新 Compose 状态
+                                    changeAppLanguage(
+                                        context,
+                                        newLocaleTag
+                                    )  // 重建 Activity 加载资源
                                 }
                             )
                         }
