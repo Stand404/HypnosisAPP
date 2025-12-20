@@ -1,28 +1,30 @@
 package com.stand.hypnosis
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -38,22 +40,25 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.delay
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import kotlin.math.roundToInt
-
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 
 /**
  * 下滑呼出 / 上滑收起 抽屉
@@ -62,13 +67,52 @@ import kotlin.math.roundToInt
 fun TopSwipeDrawerLayer(
     modifier: Modifier = Modifier,
     configManager: ConfigManager,
-    onConfigUpdate: (() -> Unit)? = null  // 添加这个参数
+    onConfigUpdate: (() -> Unit)? = null,  // 添加这个参数
 ) {
+    val context = LocalContext.current
+
     // 使用 mutableStateOf 来管理配置状态
     var isBeating by remember { mutableStateOf(configManager.isBeating) }
     var isFullScreen by remember { mutableStateOf(configManager.isFullScreen) }
     var ringColor by remember { mutableIntStateOf(configManager.ringColor) }
     var bgColor by remember { mutableIntStateOf(configManager.bgColor) }
+    // 新增Heart颜色配置
+    var heartOuterFillColor by remember { mutableIntStateOf(configManager.heartOuterFillColor) }
+    var heartOuterStrokeColor by remember { mutableIntStateOf(configManager.heartOuterStrokeColor) }
+    var heartInnerStrokeColor by remember { mutableIntStateOf(configManager.heartInnerStrokeColor) }
+
+    // 新增语言选择
+    var language by remember { mutableIntStateOf(configManager.language) }
+
+    // 新增自定义图案路径
+    var customPatternPath by remember { mutableStateOf(configManager.patternFilePath) }
+    // 新增中心图案缩放比例
+    var patternScale by remember { mutableFloatStateOf(configManager.patternScale) }
+    // 文件选择启动器
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            uri?.let {
+                // 通过 context.contentResolver 访问
+                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+                inputStream?.let { stream ->
+                    val outputFile = File(context.filesDir, "custom_pattern.jpg")
+
+                    // 使用 use 自动关闭流
+                    stream.use { input ->
+                        FileOutputStream(outputFile).use { output ->
+                            input.copyTo(output)
+                        }
+                    }
+
+                    // 更新配置
+                    configManager.patternFilePath = outputFile.absolutePath
+                    customPatternPath = outputFile.absolutePath
+                    onConfigUpdate?.invoke()
+                }
+            }
+        }
+    )
 
     // 当配置改变时，直接更新 ConfigManager
     fun updateIsBeating(value: Boolean) {
@@ -80,6 +124,25 @@ fun TopSwipeDrawerLayer(
     fun updateIsFullScreen(value: Boolean) {
         isFullScreen = value
         configManager.isFullScreen = value
+        onConfigUpdate?.invoke()  // 通知外部配置已更新
+    }
+
+    fun updateLanguage(value: Int) {
+        language = value
+        configManager.language = value
+        onConfigUpdate?.invoke()  // 通知外部配置已更新
+    }
+
+    fun updatePatternPath(value: String?) {
+        customPatternPath = value
+        configManager.patternFilePath = value
+        onConfigUpdate?.invoke()  // 通知外部配置已更新
+    }
+
+    // 新增中心图案缩放比例更新方法
+    fun updatePatternScale(value: Float) {
+        patternScale = value
+        configManager.patternScale = value
         onConfigUpdate?.invoke()  // 通知外部配置已更新
     }
 
@@ -95,10 +158,32 @@ fun TopSwipeDrawerLayer(
         onConfigUpdate?.invoke()
     }
 
+    // 新增Heart颜色更新方法
+    fun updateHeartOuterFillColor(value: Int) {
+        heartOuterFillColor = value
+        configManager.heartOuterFillColor = value
+        onConfigUpdate?.invoke()
+    }
+
+    fun updateHeartOuterStrokeColor(value: Int) {
+        heartOuterStrokeColor = value
+        configManager.heartOuterStrokeColor = value
+        onConfigUpdate?.invoke()
+    }
+
+    fun updateHeartInnerStrokeColor(value: Int) {
+        heartInnerStrokeColor = value
+        configManager.heartInnerStrokeColor = value
+        onConfigUpdate?.invoke()
+    }
+
     // -------------------- 内部状态 --------------------
 
     var isVisible by remember { mutableStateOf(false) }
     val start = 200
+    // 新增分页状态
+    var currentPage by remember { mutableIntStateOf(0) }
+    val totalPages = 3
 
     // 使用像素偏移而不是百分比，更精确控制
     var drawerHeight by remember { mutableIntStateOf(0) }
@@ -137,15 +222,19 @@ fun TopSwipeDrawerLayer(
     // 颜色选择器状态
     var showRingColorPicker by remember { mutableStateOf(false) }
     var showBgColorPicker by remember { mutableStateOf(false) }
+    // 新增Heart颜色选择器状态
+    var showHeartOuterFillColorPicker by remember { mutableStateOf(false) }
+    var showHeartOuterStrokeColorPicker by remember { mutableStateOf(false) }
+    var showHeartInnerStrokeColorPicker by remember { mutableStateOf(false) }
+    // 语言选择对话框状态
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showResetDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectDragGestures(
-                    onDragStart = { offset ->
-                        //isDragging = true
-                    },
                     onDrag = { change, dragAmount ->
                         change.consume()
 
@@ -157,9 +246,6 @@ fun TopSwipeDrawerLayer(
                         else if (dragAmount.y < -20f && isVisible) {
                             isVisible = false
                         }
-                    },
-                    onDragEnd = {
-                        //isDragging = false
                     }
                 )
             }
@@ -212,20 +298,106 @@ fun TopSwipeDrawerLayer(
                         }
                     )
             ){
-                Column{
-                    Text("设置面板", style = MaterialTheme.typography.headlineMedium,
+                Column(Modifier.animateContentSize()){
+                    Text(stringResource(R.string.settings_title),
+                        style = TextStyle(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
                         color = Color.White,
                         modifier = Modifier.padding(top = 35.dp, start = 16.dp))
-                    Text("往下滑动打开，往上滑动关闭",
-                        color = Color.White,
-                        modifier = Modifier.padding(top = 10.dp, start = 16.dp, bottom = 20.dp))
+                    Text(stringResource(R.string.swipe_hint),
+                        color = Color.White.copy(0.7f),
+                        modifier = Modifier.padding(top = 10.dp, start = 16.dp, end = 16.dp, bottom = 20.dp))
+                    // 新增分页标题和切换按钮
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                            .padding(bottom = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // 左箭头按钮
+                        IconButton(
+                            onClick = {
+                                currentPage = if (currentPage > 0) currentPage - 1 else totalPages - 1
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(painter = painterResource(R.drawable.outline_chevron_left_24),
+                                contentDescription = stringResource(R.string.left),
+                                tint = MaterialTheme.colorScheme.primary)
+                        }
+
+                        // 页标题
+                        Text(
+                            text = when (currentPage) {
+                                0 -> stringResource(id = R.string.global_settings)
+                                1 -> stringResource(id = R.string.animation_settings)
+                                else -> stringResource(id = R.string.center_settings)
+                            },
+                            style = TextStyle(fontSize = 20.sp),
+                            color = Color.White
+                        )
+
+                        // 右箭头按钮
+                        IconButton(
+                            onClick = {
+                                currentPage = if (currentPage < totalPages - 1) currentPage + 1 else 0
+                            },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(painter = painterResource(R.drawable.outline_chevron_right_24),
+                                contentDescription = stringResource(R.string.right),
+                                tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
 
                     // 为每个配置项添加依次进入动画
-                    val settingItems = listOf<@Composable () -> Unit>(
-                        // 心跳动画开关
+                    // 将设置项按页分组
+                    val page0Items = listOf<@Composable () -> Unit>(
+                        // 全局设置：全屏，语言
                         {
                             SwitchSettingItem(
-                                title = "心跳动画",
+                                title = stringResource(id = R.string.full_screen),
+                                checked = isFullScreen,
+                                onCheckedChange = { newValue -> updateIsFullScreen(newValue) }
+                            )
+                        },
+                        {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(50.dp)
+                                    .clickable { showLanguageDialog = true }
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+
+                                Text(text = stringResource(id = R.string.language),
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    text = when (language) {
+                                        0 -> stringResource(R.string.chinese)
+                                        1 -> stringResource(R.string.english)
+                                        else -> stringResource(R.string.japanese)
+                                    },
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontSize = 16.sp
+                                )
+                            }
+                        }
+                    )
+
+                    val page1Items = listOf<@Composable () -> Unit>(
+                        // 动画设置：心跳动画，动画颜色，背景颜色
+                        {
+                            SwitchSettingItem(
+                                title = stringResource(id = R.string.heart_animation),
                                 checked = isBeating,
                                 onCheckedChange = { newValue ->
                                     updateIsBeating(newValue)
@@ -233,88 +405,174 @@ fun TopSwipeDrawerLayer(
                             )
                         },
                         {
-                            SwitchSettingItem(
-                                title = "全屏",
-                                checked = isFullScreen,
-                                onCheckedChange = { newValue ->
-                                    updateIsFullScreen(newValue)
-                                }
-                            )
-                        },
-                        // 圆环颜色选择
-                        {
                             ColorSettingItem(
-                                title = "动画颜色",
+                                title = stringResource(R.string.animation_color),
                                 color = ringColor,
                                 onColorClick = { showRingColorPicker = true  }
                             )
                         },
-                        // 背景颜色选择
                         {
                             ColorSettingItem(
-                                title = "背景颜色",
+                                title = stringResource(R.string.background_color),
                                 color = bgColor,
-                                onColorClick = { showBgColorPicker = true }
-                            )
+                                onColorClick = { showBgColorPicker = true })
                         }
-                        // 添加更多配置项...
                     )
+
+                    val page2Items = listOf<@Composable () -> Unit>(
+                        // 中心设置：选择图案，中心色，外描边，内描边
+                        {
+                            Row(modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
+                                .padding(horizontal = 16.dp)
+                                .clickable{ if(customPatternPath==null) filePickerLauncher.launch("image/*") },
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+
+                                Text(
+                                    text = stringResource(R.string.select_pattern),
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                if (customPatternPath != null) {
+                                    Button(
+                                        onClick = { updatePatternPath(null) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.background,
+                                            contentColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    ) {
+                                        Text(stringResource(R.string.clear))
+                                    }
+                                }else{
+                                    Text(
+                                        text = stringResource(R.string.not_selected),
+                                        color = Color.White,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        },
+                        // 中心图案缩放设置
+                        {
+                            SliderSettingItem(
+                                title = stringResource(R.string.pattern_scale),
+                                value = patternScale,
+                                valueRange = 0f..5.0f,
+                                onValueChange = { newValue ->
+                                    updatePatternScale(newValue)
+                                },
+                                formatValue = { String.format("%.1f", it) }
+                            )
+                        },
+                        // 条件显示Heart颜色配置项（仅当没有自定义图案时）
+                        {
+                            if (customPatternPath == null) {
+                                ColorSettingItem(
+                                    title = stringResource(R.string.heart_outer_fill_color),
+                                    color = heartOuterFillColor,
+                                    onColorClick = { showHeartOuterFillColorPicker = true }
+                                )
+                            }
+                        },
+                        {
+                            if (customPatternPath == null) {
+                                ColorSettingItem(
+                                    title = stringResource(R.string.heart_outer_stroke_color),
+                                    color = heartOuterStrokeColor,
+                                    onColorClick = { showHeartOuterStrokeColorPicker = true })
+                            }
+                        },
+                        {
+                            if (customPatternPath == null) {
+                                ColorSettingItem(
+                                    title = stringResource(R.string.heart_inner_stroke_color),
+                                    color = heartInnerStrokeColor,
+                                    onColorClick = { showHeartInnerStrokeColorPicker = true })
+                            }
+                        }
+                    )
+
+                    if (showResetDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showResetDialog = false },
+                            title = { Text(stringResource(id = R.string.reset_settings)) },
+                            text = { Text(stringResource(id = R.string.reset_confirm)) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        // 重置所有配置
+                                        configManager.resetToDefault()
+
+                                        // 更新UI状态
+                                        updateIsBeating(configManager.isBeating)
+                                        updateIsFullScreen(configManager.isFullScreen)
+                                        updateLanguage(configManager.language)
+                                        updatePatternPath(configManager.patternFilePath)
+                                        updatePatternScale(configManager.patternScale)
+                                        updateRingColor(configManager.ringColor)
+                                        updateBgColor(configManager.bgColor)
+                                        updateHeartOuterFillColor(configManager.heartOuterFillColor)
+                                        updateHeartOuterStrokeColor(configManager.heartOuterStrokeColor)
+                                        updateHeartInnerStrokeColor(configManager.heartInnerStrokeColor)
+
+                                        showResetDialog = false
+                                    }
+                                ) {
+                                    Text(stringResource(id = R.string.confirm))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showResetDialog = false }) {
+                                    Text(stringResource(id = R.string.cancel))
+                                }
+                            }
+                        )
+                    }
+
                     val screenWidthPx = with(density) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
-                    settingItems.forEachIndexed { index, itemContent ->
+                    // 根据当前页面显示对应的设置项
+                    val currentItems = when (currentPage) {
+                        0 -> page0Items
+                        1 -> page1Items
+                        else -> page2Items
+                    }
+
+                    currentItems.forEachIndexed { index, itemContent ->
                         AnimatedSettingItem(
                             index = index,
                             isVisible = isVisible,
                             screenWidthPx = screenWidthPx,
                             start = start
                         ) {
-                            itemContent()  // 渲染具体的配置组件
+                            itemContent()
                         }
                     }
 
+                    // 显示重置按钮
+                    Spacer(Modifier.height(6.dp))
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 25.dp, vertical = 24.dp),
+                            .fillMaxWidth(),
                         contentAlignment = Alignment.Center
                     ) {
-                        val uriHandler = LocalUriHandler.current
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Button(
+                            onClick = { showResetDialog = true },
+                            shape = RoundedCornerShape(5.dp)
                         ) {
-                            // 第一行：版权信息
-                            Row {
+                            key(language) {
                                 Text(
-                                    text = "Copyright © 2025 ",
-                                    color = Color.White.copy(0.7f),
-                                    fontSize = 12.sp
-                                )
-
-                                Text(
-                                    text = "Stand",
-                                    color = Color(0xFF29C6FF),
-                                    fontSize = 12.sp,
-                                    textDecoration = TextDecoration.Underline,
-                                    modifier = Modifier.clickable {
-                                        uriHandler.openUri("https://space.bilibili.com/382365750")
-                                    }
+                                    text = stringResource(R.string.reset_settings),
+                                    color = Color.White,
+                                    fontSize = 18.sp
                                 )
                             }
-
-                            // 第二行：GitHub 链接
-                            Text(
-                                text = "GitHub开源地址",
-                                color = Color(0xFF6CC644), // GitHub 绿色
-                                fontSize = 12.sp,
-                                textDecoration = TextDecoration.Underline,
-                                modifier = Modifier
-                                    .clickable {
-                                        uriHandler.openUri("https://github.com/Stand404/HypnosisAPP")
-                                    }
-                                    .padding(top = 4.dp)
-                            )
                         }
                     }
+                    About()
                 }
             }
 
@@ -340,264 +598,50 @@ fun TopSwipeDrawerLayer(
                     onDismiss = { showBgColorPicker = false }
                 )
             }
+
+            // 新增Heart颜色选择器对话框
+            if (showHeartOuterFillColorPicker) {
+                ColorPickerDialog(
+                    currentColor = heartOuterFillColor,
+                    onColorSelected = { newColor:Int ->
+                        updateHeartOuterFillColor(newColor)
+                        showHeartOuterFillColorPicker = false
+                    },
+                    onDismiss = { showHeartOuterFillColorPicker = false }
+                )
+            }
+
+            if (showHeartOuterStrokeColorPicker) {
+                ColorPickerDialog(
+                    currentColor = heartOuterStrokeColor,
+                    onColorSelected = { newColor:Int ->
+                        updateHeartOuterStrokeColor(newColor)
+                        showHeartOuterStrokeColorPicker = false
+                    },
+                    onDismiss = { showHeartOuterStrokeColorPicker = false }
+                )
+            }
+
+            if (showHeartInnerStrokeColorPicker) {
+                ColorPickerDialog(
+                    currentColor = heartInnerStrokeColor,
+                    onColorSelected = { newColor:Int ->
+                        updateHeartInnerStrokeColor(newColor)
+                        showHeartInnerStrokeColorPicker = false
+                    },
+                    onDismiss = { showHeartInnerStrokeColorPicker = false }
+                )
+            }
+
+            // 语言选择对话框
+            if (showLanguageDialog) {
+                LanguageSelectDialog(
+                    currentLanguage = language,
+                    onLanguageSelected = { selected ->
+                        updateLanguage(selected)
+                    },
+                    onDismiss = { showLanguageDialog = false })
+            }
         }
     }
-}
-
-@Composable
-fun AnimatedSettingItem(
-    index: Int,
-    isVisible: Boolean,
-    screenWidthPx: Float,
-    start: Int,
-    content: @Composable () -> Unit  // 改为接收Composable内容
-) {
-    val targetOffsetX by animateFloatAsState(
-        targetValue = if (isVisible) 0f else screenWidthPx,
-        animationSpec = if (isVisible) {
-            tween(
-                durationMillis = 200,
-                delayMillis = start + index * 150,
-                easing = FastOutSlowInEasing
-            )
-        } else {
-            tween(durationMillis = 150, easing = FastOutSlowInEasing)
-        },
-        label = "slide_in_animation_$index"
-    )
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .graphicsLayer {
-                translationX = targetOffsetX
-            }
-    ) {
-        content()  // 在这里渲染具体的配置组件
-
-    }
-}
-
-// 开关配置项
-@Composable
-fun SwitchSettingItem(
-    title: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(title, color = Color.White, fontSize = 18.sp, modifier = Modifier.weight(1f) )
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
-    }
-}
-
-// 颜色预览配置项
-@Composable
-fun ColorSettingItem(
-    title: String,
-    color: Int,
-    onColorClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(50.dp)
-            .clickable(onClick = onColorClick)
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(title, color = Color.White, fontSize = 18.sp, modifier = Modifier.weight(1f) )
-        Box(
-            modifier = Modifier
-                .size(30.dp)
-                .background(Color(color), CircleShape)
-        )
-    }
-}
-
-@Composable
-fun ColorPickerDialog(
-    currentColor: Int,
-    onColorSelected: (Int) -> Unit,
-    onDismiss: () -> Unit
-) {
-    var red by remember {
-        mutableFloatStateOf((currentColor shr 16 and 0xff) / 255f)
-    }
-    var green by remember {
-        mutableFloatStateOf((currentColor shr 8 and 0xff) / 255f)
-    }
-    var blue by remember {
-        mutableFloatStateOf((currentColor and 0xff) / 255f)
-    }
-
-    val selectedColor = remember(red, green, blue) {
-        Color(red, green, blue)
-    }
-
-    val hexValue = remember(red, green, blue) {
-        val r = (red * 255).toInt()
-        val g = (green * 255).toInt()
-        val b = (blue * 255).toInt()
-        String.format("#%02X%02X%02X", r, g, b)
-    }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("选择颜色")},
-        text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
-                // 当前颜色预览
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .background(selectedColor)
-                ) {
-                    Text(
-                        text = hexValue,
-                        modifier = Modifier.align(Alignment.Center),
-                        color = if (selectedColor.luminance() > 0.5f) Color.Black else Color.White,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // 红色通道
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "红",
-                        modifier = Modifier.width(24.dp),
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Slider(
-                        value = red,
-                        onValueChange = { red = it },
-                        valueRange = 0f..1f,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        "${(red * 255).toInt()}",
-                        modifier = Modifier.width(30.dp)
-                    )
-                }
-
-                // 绿色通道
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "绿",
-                        modifier = Modifier.width(24.dp),
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Slider(
-                        value = green,
-                        onValueChange = { green = it },
-                        valueRange = 0f..1f,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        "${(green * 255).toInt()}",
-                        modifier = Modifier.width(30.dp)
-                    )
-                }
-
-                // 蓝色通道
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        "蓝",
-                        modifier = Modifier.width(24.dp),
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                    Slider(
-                        value = blue,
-                        onValueChange = { blue = it },
-                        valueRange = 0f..1f,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Text(
-                        "${(blue * 255).toInt()}",
-                        modifier = Modifier.width(30.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // 快速预设颜色
-                val presetColors = listOf(
-                    0xFFFF0000 to "红", 0xFF00FF00 to "绿", 0xFF0000FF to "蓝",
-                    0xFFFFFF00 to "黄", 0xFFFF00FF to "紫", 0xFF00FFFF to "青",
-                    0xFFFFFFFF to "白", 0xFF000000 to "黑", 0xFFFFA500 to "橙",
-                    0xFF808080 to "灰", 0xFFA52A2A to "棕", 0xFFFFC0CB to "粉"
-                )
-
-                Text("快速选择:", modifier = Modifier.padding(vertical = 8.dp))
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(presetColors) { (color, name) ->
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(Color(color))
-                                    .border(
-                                        2.dp,
-                                        if (color == selectedColor.toArgb()
-                                                .toLong()
-                                        ) Color.White else Color.Transparent,
-                                        CircleShape
-                                    )
-                                    .clickable {
-                                        red = ((color shr 16) and 0xff) / 255f
-                                        green = ((color shr 8) and 0xff) / 255f
-                                        blue = (color and 0xff) / 255f
-                                    }
-                            )
-                            Text(
-                                text = name,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                onDismiss
-                onColorSelected(selectedColor.toArgb())}) {
-                Text("确定")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("取消")
-            }
-        },
-        titleContentColor = MaterialTheme.colorScheme.secondary,
-        textContentColor = MaterialTheme.colorScheme.onSurface
-    )
 }

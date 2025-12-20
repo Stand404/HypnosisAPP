@@ -1,3 +1,37 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">催眠APP</string>
+    <string name="settings_title">设置面板</string>
+    <string name="swipe_hint">下滑打开，上滑关闭，下方左右按钮翻页</string>
+    <string name="heart_animation">心跳动画</string>
+    <string name="full_screen">全屏</string>
+    <string name="animation_color">动画颜色</string>
+    <string name="background_color">背景颜色</string>
+    <string name="heart_outer_fill_color">爱心中心色</string>
+    <string name="heart_outer_stroke_color">爱心外描边</string>
+    <string name="heart_inner_stroke_color">爱心内描边</string>
+    <string name="heart_color">心跳颜色</string>
+    <string name="reset_settings">重置设置</string>
+    <string name="select_pattern">选择图案</string>
+    <string name="not_selected" tools:ignore="PrivateResource">未选择</string>
+    <string name="language_select">选择语言</string>
+    <string name="language">语言</string>
+    <string name="chinese">中文</string>
+    <string name="english">英文</string>
+    <string name="japanese">日文</string>
+    <string name="reset_confirm">确定要重置所有设置吗？</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="choose">选择</string>
+    <string name="clear">清除</string>
+    <string name="pattern_scale">缩放比例</string>
+    <string name="color_picker">选择颜色</string>
+    <string name="red">红</string>
+    <string name="green">绿</string>
+    <string name="blue">蓝</string>
+    <string name="quick_select">快速选择:</string>
+    <string name="global_settings">全局设置</string>
+    <string name="animation_settings">动画设置</string>
+    <string name="center_settings">中心设置</string>
+    <string name="left">左</string>
+    <string name="right">右</string>
 </resources>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">Hypnosis App</string>
+    <string name="settings_title">Settings Panel</string>
+    <string name="swipe_hint">Swipe down to open, swipe up to close, use the buttons at the bottom to turn pages</string>
+    <string name="heart_animation">Heart Animation</string>
+    <string name="full_screen">Full Screen</string>
+    <string name="animation_color">Ring Color</string>
+    <string name="background_color">Background Color</string>
+    <string name="heart_outer_fill_color">Heart Outer Fill</string>
+    <string name="heart_outer_stroke_color">Heart Outer Stroke</string>
+    <string name="heart_inner_stroke_color">Heart Inner Stroke</string>
+    <string name="heart_color">Heart Color</string>
+    <string name="reset_settings">Reset Settings</string>
+    <string name="select_pattern">Select Custom Pattern</string>
+    <string name="not_selected" tools:ignore="PrivateResource">Not selected</string>
+    <string name="language_select">Select Language</string>
+    <string name="language">Language</string>
+    <string name="chinese">Chinese</string>
+    <string name="english">English</string>
+    <string name="japanese">Japanese</string>
+    <string name="reset_confirm">Are you sure you want to reset all settings?</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="choose">Choose</string>
+    <string name="clear">Clear</string>
+    <string name="pattern_scale">Pattern Scale</string>
+    <string name="color_picker">Select Color</string>
+    <string name="red">Red</string>
+    <string name="green">Green</string>
+    <string name="blue">Blue</string>
+    <string name="quick_select">Quick Presets:</string>
+    <string name="global_settings">Global Settings</string>
+    <string name="animation_settings">Animation Settings</string>
+    <string name="center_settings">Center Settings</string>
+    <string name="left">Left</string>
+    <string name="right">Right</string>
+</resources>
